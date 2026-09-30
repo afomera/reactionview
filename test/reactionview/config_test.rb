@@ -74,6 +74,10 @@ class ReActionView::ConfigTest < Minitest::Spec
     refute_predicate config, :dev_server_enabled?
   end
 
+  test "Slim templates are left alone unless intercept_slim is on" do
+    refute ReActionView::Config.new.intercept_slim
+  end
+
   test "project_path defaults to Rails.root" do
     config = ReActionView::Config.new
 

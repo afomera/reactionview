@@ -29,8 +29,8 @@ module ReActionView
           cssfunc: nil,
         }.freeze
 
-        def self.call(template, source, validation_mode: nil)
-          new.call(template, source, validation_mode: validation_mode)
+        def self.call(template, source, validation_mode: nil, language: nil)
+          new.call(template, source, validation_mode: validation_mode, language: language)
         end
 
         def self.compile_for_dependencies(source, path)
@@ -45,7 +45,10 @@ module ReActionView
           new.compile_for_block(source, path, index)
         end
 
-        def call(template, source, validation_mode: nil)
+        # `language` is the language the source is written in, `"erb"` or `"slim"`. It defaults to
+        # the one the template's path names, so a `.html.slim` template compiles as Slim.
+        def call(template, source, validation_mode: nil, language: nil)
+          @language = language&.to_s
           mode = validation_mode || ReActionView.config.validation_mode
 
           visitors = base_visitors(template, validation_mode: mode)
@@ -55,6 +58,7 @@ module ReActionView
             project_path: ::ReActionView.config.project_path,
             visitors: visitors,
             **engine_options,
+            **language_option(template),
           }
 
           return values_source(template, source, config) if values_format?(template)
@@ -77,7 +81,8 @@ module ReActionView
             filename: translate_path_for_editor(path),
             project_path: ::ReActionView.config.project_path,
             visitors: [*base_visitors(template), visitor],
-            **engine_options
+            **engine_options,
+            **language_option(template)
           ).src
 
           visitor
@@ -97,6 +102,7 @@ module ReActionView
             slot_visitor: visitor,
             block: index,
             **engine_options,
+            **language_option(template),
             **VALUES_ESCAPING
           ).src
         end
@@ -107,10 +113,10 @@ module ReActionView
           ::Herb::Engine::Slots::SchemaCompiler.call(
             source,
             filename: translate_path_for_editor(path),
-            mode: ::ReActionView.config.slot_mode_for(source),
+            mode: ::ReActionView.config.slot_mode_for(source, language: language_of(template)),
             visitors: -> { base_visitors(template, validation_mode: schema_validation_mode) },
             engine: erb_implementation,
-            options: { project_path: ::ReActionView.config.project_path, **engine_options }
+            options: { project_path: ::ReActionView.config.project_path, **engine_options, **language_option(template) }
           )
         end
 
@@ -141,6 +147,21 @@ module ReActionView
           defaults = ::Herb.configuration.engine_option("parser_options", {})
 
           options.merge(parser_options: defaults.transform_keys(&:to_sym).merge(configured))
+        end
+
+        # The language the template compiles as: the one `call` was given, or the one its path names.
+        def language_of(template)
+          return @language if @language
+
+          ReActionView::Template.language_for(template.respond_to?(:identifier) ? template.identifier : nil)
+        end
+
+        # Tells the engine the template is Slim. ERB templates compile with the options they always
+        # have, so an engine that predates Slim sees nothing new.
+        def language_option(template)
+          language = language_of(template)
+
+          language == "erb" ? {} : { language: language }
         end
 
         def resolver_option
@@ -196,7 +217,7 @@ module ReActionView
         def slot_visitors(template, source, mark: true)
           return [] unless values_format?(template) || (template.respond_to?(:format) && template.format == :html)
 
-          mode = ::ReActionView.config.slot_mode_for(source)
+          mode = ::ReActionView.config.slot_mode_for(source, language: language_of(template))
 
           return [] unless mode
 

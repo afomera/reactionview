@@ -103,7 +103,7 @@ module ReActionView
 
       next if views.empty?
 
-      watcher = app.config.file_watcher.new([], views.index_with { %w[erb] }) do
+      watcher = app.config.file_watcher.new([], views.index_with { %w[erb slim] }) do
         ReActionView::Slots.reset_dependencies!
       end
 
@@ -152,6 +152,29 @@ module ReActionView
     config.after_initialize do
       ActiveSupport.on_load(:action_view) do
         ActionView::Template.register_template_handler :erb, ReActionView::Template::Handlers::ERB if ReActionView.config.intercept_erb
+        ReActionView::Railtie.register_slim_handler if ReActionView.config.intercept_slim
+      end
+    end
+
+    # Takes `.slim` over from the handler registered for it (the Slim gem's, when it's installed),
+    # which stays around for the templates ReActionView leaves out.
+    def self.register_slim_handler
+      unless ReActionView::Template.slim_supported?
+        raise ArgumentError, "config.intercept_slim needs a Herb that compiles Slim templates (herb #{::Herb::VERSION} does not)"
+      end
+
+      previous = registered_slim_handler
+      previous = previous.fallback if previous.is_a?(ReActionView::Template::Handlers::Slim)
+
+      ActionView::Template.register_template_handler :slim, ReActionView::Template::Handlers::Slim.new(fallback: previous)
+    end
+
+    # The handler registered for `.slim`, or nil. Rails 8.2 keeps the registry on `Handlers`.
+    def self.registered_slim_handler
+      if ActionView::Template.respond_to?(:registered_template_handler)
+        ActionView::Template.registered_template_handler(:slim)
+      else
+        ActionView::Template::Handlers.template_handlers[:slim]
       end
     end
   end

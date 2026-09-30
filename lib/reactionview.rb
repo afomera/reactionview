@@ -25,11 +25,13 @@ require_relative "reactionview/slots/rendering"
 require_relative "reactionview/slots/state_overrides"
 require_relative "reactionview/slots/dev_compiler"
 
+require_relative "reactionview/template/language"
 require_relative "reactionview/template/dependencies"
 require_relative "reactionview/template/partial_resolver"
 require_relative "reactionview/template/local_template"
 
 require_relative "reactionview/template/handlers/erb"
+require_relative "reactionview/template/handlers/slim"
 require_relative "reactionview/template/handlers/herb"
 require_relative "reactionview/template/handlers/herb/herb"
 

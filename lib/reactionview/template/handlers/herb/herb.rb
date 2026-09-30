@@ -90,6 +90,13 @@ module ReActionView
               super
             end
 
+            # A Slim template's compiled Ruby is padded down to the line each piece of code came
+            # from, which counts the newlines already written, so the pending ones go out first.
+            def align_to_source_line(line)
+              flush_newline_if_pending(@src)
+              super
+            end
+
             def flush_newline_if_pending(src)
               return unless @newline_pending.positive?
 

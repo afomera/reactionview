@@ -9,6 +9,7 @@ module ReActionView
     SLOT_MODES = %i[server client].freeze
 
     attr_accessor :intercept_erb
+    attr_accessor :intercept_slim
     attr_accessor :debug_mode
 
     attr_reader :slots
@@ -20,6 +21,7 @@ module ReActionView
 
     def initialize
       @intercept_erb = false
+      @intercept_slim = false
       @debug_mode = nil
       @dev_server = nil
       @dev_server_port = nil
@@ -79,8 +81,18 @@ module ReActionView
       @slots = value
     end
 
-    def slot_mode_for(source)
-      ::Herb::Engine::Slots::Visitor.directive_mode(source) || default_slot_mode
+    # The slot mode a template compiles in: its own `herb:slots` directive, or the project default.
+    # A Slim template writes the directive as `/ herb:slots`, so pass its path (or its language).
+    def slot_mode_for(source, path = nil, language: nil)
+      language ||= ReActionView::Template.language_for(path)
+
+      directive = if language == "slim"
+                    ::Herb::Engine::Slots::Visitor.directive_mode(source, language: language)
+                  else
+                    ::Herb::Engine::Slots::Visitor.directive_mode(source)
+                  end
+
+      directive || default_slot_mode
     end
 
     def default_slot_mode
