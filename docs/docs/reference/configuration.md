@@ -17,6 +17,7 @@ end
 | Option | Default | Controls |
 | --- | --- | --- |
 | [`intercept_erb`](#intercept-erb) | `false` | Whether `.html.erb` templates render through Herb |
+| [`intercept_slim`](#intercept-slim) | `false` | Whether `.html.slim` templates render through Herb |
 | [`debug_mode`](#debug-mode) | on in development | Debug attributes and the dev tools |
 | [`validation_mode`](#validation-mode) | `:raise` in test, `:overlay` otherwise | What happens when a validator reports a problem |
 | [`slots`](#slots) | `false` | Reactive templates, and the default slot mode |
@@ -31,6 +32,27 @@ end
 ## `intercept_erb`
 
 Renders `.html.erb` templates through `Herb::Engine`. Templates named `.html.herb` render through Herb whether this is on or not. Only templates with the `html` format are intercepted.
+
+**Default**: `false`
+
+## `intercept_slim`
+
+Renders `.slim` templates through `Herb::Engine`, which parses the Slim into the same HTML+ERB tree it builds for ERB. Everything ReActionView does for an ERB template then applies to a Slim one: the validators and their overlays, debug mode, the dev tools in a Slim layout's `<head>`, registered visitors, reactive templates, and in-place patches from the dev server.
+
+:::code-group
+```ruby [config/initializers/reactionview.rb]
+ReActionView.configure do |config|
+  config.intercept_erb = true
+  config.intercept_slim = true
+  config.debug_mode = Rails.env.development?
+  config.slots = true
+end
+```
+:::
+
+It takes `.slim` over from the handler registered for it, which is the Slim gem's when `slim-rails` is installed, and keeps that handler for what it leaves out: formats other than `html` (a mailer's `.text.slim`) and, following [`external_template_mode`](#templates-from-gems), templates from gems. Without the Slim gem, Herb compiles every `.slim` template. Your project's Slim settings (`slim:` in `.herb.yml`, such as custom shortcuts) apply. A Slim template asks for slots with `/ herb:slots` or `/ herb:slots client`, the Slim spelling of `<%# herb:slots %>`.
+
+This needs a version of Herb that compiles Slim.
 
 **Default**: `false`
 

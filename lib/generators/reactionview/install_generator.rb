@@ -20,6 +20,9 @@ module ReActionView
             # Intercept .html.erb templates and process them with `Herb::Engine` for enhanced features
             # config.intercept_erb = true
 
+            # Intercept .slim templates and process them with `Herb::Engine` too (keeps the Slim gem's handler for the rest)
+            # config.intercept_slim = true
+
             # Enable debug mode in development (adds debug attributes to HTML)
             config.debug_mode = Rails.env.development?
 

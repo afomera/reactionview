@@ -10,6 +10,8 @@ ReActionView registers a `herb` template handler, so `.html.herb` templates alwa
 
 With `config.intercept_erb = true`, it also replaces the handler for `.html.erb`. Only templates with the `html` format are intercepted, together with the `slots` format reactive templates answer with. Mailer text parts, `.json.erb`, `.xml.erb` and every other format keep rendering through Rails' own ERB handler.
 
+With `config.intercept_slim = true`, it also takes over `.slim`. Herb parses a Slim template into the same tree it builds for ERB, so a Slim template gets everything an ERB one does, including reactive templates and in-place patches from the dev server. Formats other than `html` and `slots` keep the handler `.slim` had before, which is the Slim gem's when `slim-rails` is installed. See [`intercept_slim`](/reference/configuration#intercept-slim).
+
 Templates that ship inside gems are handled separately, so a gem's markup can never break your pages. [Templates from gems](/reference/configuration#templates-from-gems) has the options.
 
 ## Rails 8.2 and the built-in Herb implementation

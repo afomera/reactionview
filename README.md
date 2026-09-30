@@ -38,6 +38,8 @@ bin/rails generate reactionview:install
 
 The generator creates `config/initializers/reactionview.rb` and imports the client from `app/javascript/application.js`. On importmap-rails the gem pins the client for you. With a bundler, install the `reactionview` npm package as well.
 
+Templates written in Slim work too. Turn on `config.intercept_slim` and ReActionView compiles `.html.slim` templates with Herb, with the same overlays, dev tools, reactive templates and live patching as ERB. See [`intercept_slim`](https://reactionview.dev/reference/configuration#intercept-slim).
+
 ReActionView needs Ruby 3.2 or newer and Rails 7.0 or newer. [Setup](https://reactionview.dev/installation) covers turning on reactive templates and checking that it works, and the [Quick Start](https://reactionview.dev/quick-start) builds a first reactive page.
 
 ### Development
